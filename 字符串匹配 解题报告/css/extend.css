@@ -1,0 +1,62 @@
+﻿red {
+	background-color: red;
+	color: white;
+	font-size: 25px;
+}
+
+blue {
+	background-color: blue;
+	color: white;
+	font-size: 25px;
+}
+
+topic {
+	text-align: center;
+	font-size: 80px;
+	margin-top: 23vh;
+	padding: 10px 4%;
+}
+
+topic>* {font-size: 80px;}
+
+subtopic {
+	font-size: 20px;
+	text-align: center;
+	padding: 10px 4%;
+}
+
+subtopic>* {font-size: 20px;}
+
+shady {
+	color: #000;
+	background-color: #000;
+	font-size: inherit;
+	transition: 0.8s all;
+}
+
+shady:hover {
+	color: #fff;
+}
+
+wshady {
+	color: rgba(0,0,0,0);
+	background-color: rgba(0,0,0,0);
+	font-size: inherit;
+	transition: 0.8s all;
+}
+
+wshady:hover {
+	color: inherit;
+}
+
+bg {
+	position: absolute;
+	top: 0;bottom: 0;left: 0;right: 0;
+	background-attachment: fixed;
+  	background-repeat: no-repeat;
+  	background-position: 50% 50%;
+  	background-size: cover;
+  	height: 100vh;
+  	width: 100%;
+  	z-index: -1145140;
+}
