@@ -1,0 +1,33 @@
+% Overleaf 共用导言区：Fandol 字体，不依赖仓库内字体文件
+% 纯文字版：不加载 TikZ 绘图库和代码高亮配置
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+
+% Overleaf 自带 Fandol 字体，避免上传 44 MB 的 LXGW / Sarasa 字体
+\setCJKsansfont{FandolHei}[BoldFont=FandolHei-Bold]
+\setCJKmainfont{FandolSong}[
+  BoldFont=FandolSong-Bold,
+  ItalicFont=FandolKai,
+  BoldItalicFont=FandolKai
+]
+\setCJKmonofont{FandolFang}
+
+% Overleaf 的 TeX Live 自带 TeX Gyre，替代 Windows 的 Times New Roman / Arial
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+
+\usetheme{SDU}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{multicol}
+
+\hypersetup{colorlinks=true,linkcolor=.,citecolor=peaking,urlcolor=peaking!70!black}
+
+% 关闭导航符号，保留主题的顶部进度条与页脚
+\setbeamertemplate{navigation symbols}{}
+
+% 常用小工具
+\newcommand{\hl}[1]{\textcolor{peaking}{\textbf{#1}}}
+\newcommand{\luogu}[2]{\href{https://www.luogu.com.cn/problem/#1}{\texttt{#1}\,\textnormal{#2}}}

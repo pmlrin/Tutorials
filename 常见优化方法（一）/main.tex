@@ -1,0 +1,443 @@
+% !TeX program = xelatex
+\documentclass[aspectratio=169]{beamer}
+\input{slides-style}
+
+% 不自动插入目录页
+\AtBeginSection[]{}
+\AtBeginSubsection[]{}
+
+\begin{document}
+
+\title{常见优化方法（一）}
+\date{2026 年 11 月}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% ============================================================
+\section{前言}
+
+\begin{frame}{优化，到底在优化什么？}
+    \begin{columns}[T]
+        \begin{column}{0.54\textwidth}
+            \small
+            朴素枚举往往是 $O(n^2)$、$O(nm)$。当 $n=10^5$ 时，$n^2=10^{10}$，已经远超一秒能承受的运算量，需要一些方法来优化程序的时间复杂度。\\
+            二分、差分、前缀和之前讲过，这次讲课复习一下。
+
+            \vspace{0.6em}
+            算法竞赛里常见的三类优化方法：
+            \begin{enumerate}
+                \item \hl{预处理}：前缀和、差分、ST 表
+                \item \hl{单调性}：二分、双指针、单调栈、单调队列
+                \item \hl{空间换时间}：桶数组、离散化
+            \end{enumerate}
+        \end{column}
+        \begin{column}{0.42\textwidth}
+            \begin{block}{复杂度预算（经验值）}
+                \vspace{0.4em}
+                \centering
+                \footnotesize
+                \begin{tabular}{ll}
+                    \toprule
+                    $n$ & 可接受复杂度 \\
+                    \midrule
+                    $10^5$ & $O(n\log n)$ \\
+                    $5\times10^6$ & $O(n)$ \\
+                    \bottomrule
+                \end{tabular}
+            \end{block}
+            \vspace{0.4em}
+            \footnotesize
+            先看数据范围，再决定要不要优化。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\section{二分}
+
+\begin{frame}{二分}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \small
+            \textbf{前提：}序列有序（或判定条件具有单调性）。
+
+            \vspace{0.3em}
+            每次取中点比较，\hl{排除一半}搜索区间。例如找第一个大于等于 $x$ 的数字，初值 $l=1,r=n$：
+            \[
+                \textit{mid}=\left\lfloor\frac{l+r}{2}\right\rfloor,
+                \quad
+                \begin{cases}
+                    a_{\textit{mid}}<x \Rightarrow &l=\textit{mid}+1,\\[3pt]
+                    a_{\textit{mid}}\ge x \Rightarrow &r=\textit{mid}-1,\\
+                    &ans=\textit{mid}.
+                \end{cases}
+            \]
+            循环到 $l>r$ 为止，结束时 $ans$ 即为答案。
+
+            \vspace{0.4em}
+            每步区间长度减半，时间复杂度为 $O(\log n)$。
+        \end{column}
+        \begin{column}{0.44\textwidth}
+            \begin{exampleblock}{举例}
+                \footnotesize
+                $a=(1,3,5,7,9,11)$，找第一个 $\ge 7$ 的位置。\\
+                \vspace{0.3em}
+                初值 $l=1,\ r=6$。\\
+                \vspace{0.3em}
+                $\textit{mid}=3$：$a_3=5<7$，$l\leftarrow 4$。\\[2pt]
+                $\textit{mid}=5$：$a_5=9\ge7$，$r\leftarrow 4$，$ans=5$。\\[2pt]
+                $\textit{mid}=4$：$a_4=7\ge7$，$r\leftarrow 3$，$ans=4$。\\[2pt]
+                $4=l>r=3$，$ans=4$，结束。
+            \end{exampleblock}
+            \vspace{0.8em}
+            \footnotesize
+            区间长度 $6\to 3\to 1\to 0$，
+            只走 $3$ 步。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+\section{差分}
+
+\begin{frame}{差分}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \small
+            定义差分数组
+            \[
+                d_i=a_i-a_{i-1}\qquad (a_0=0),
+            \]
+            那么 $d$ 的前缀和就是 $a$：
+            \[
+                a_i=\sum_{j=1}^{i}d_j.
+            \]
+            对区间 $[l,r]$ 全体加 $v$，只需
+            \[
+                d_l\mathrel{+}=v,\qquad d_{r+1}\mathrel{-}=v.
+            \]
+            修改 $O(1)$，最后统一还原 $O(n)$。适合“多次区间修改，最后统一查询”。
+        \end{column}
+        \begin{column}{0.44\textwidth}
+            \begin{exampleblock}{举例}
+                \footnotesize
+                $a=(1,3,5,7)$，则 $d=(1,2,2,2)$。\\
+                对 $[2,4]$ 加 $5$：$d_2$ 变成 $7$，$d_5$ 变成 $-5$；\\
+                再做前缀和，得到 $a=(1,8,10,12)$。
+            \end{exampleblock}
+            \vspace{1em}
+            例题 A
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+\section{前缀和}
+
+\begin{frame}{前缀和}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \small
+            定义
+            \[
+                s_i=s_{i-1}+a_i,\qquad s_0=0.
+            \]
+            区间和可以“相减”得到：
+            \[
+                \sum_{i=l}^{r}a_i=s_r-s_{l-1}.
+            \]
+            预处理 $O(n)$，单次询问 $O(1)$。适合“数组不修改，多次区间查询”。
+
+            \vspace{0.5em}
+            \hl{差分与前缀和互逆}：\\
+            $d$ 的前缀和是 $a$，$a$ 的差分是 $d$。
+        \end{column}
+        \begin{column}{0.44\textwidth}
+            \begin{exampleblock}{举例}
+                \footnotesize
+                $a=(1,3,5,7)$，则 $s=(1,4,9,16)$。\\
+                $a_2+a_3+a_4=s_4-s_1=16-1=15$。
+            \end{exampleblock}
+            \vspace{1em}
+            例题 B
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+\section{双指针}
+
+\begin{frame}{双指针：两个指针只向前走}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \small
+            朴素枚举所有区间是 $O(n^2)$。如果区间满足
+            \hl{单调性}，右指针（内层循环）就不需要回退：
+            \begin{itemize}
+                \item 右指针右移，区间和/代价单调增加
+                \item 左指针右移，区间和/代价单调减少
+                \item 每个元素最多进入一次、离开一次
+                \item 总复杂度 $O(n)$
+            \end{itemize}
+            \vspace{0.4em}
+            前提：条件必须单调。有负数时，区间和不再单调，
+            就不能直接尺取。
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{exampleblock}{举例：有序数组区间之和}
+                \footnotesize
+                数组 $(1,2,3,4,5)$，目标和 $M=9$。\\
+                初始时 $L=1,\ R=0$ 表示空，和为 $0$，右指针左移。\\
+                移动到 $L=1,\ R=4$，和为 $10>9$，左指针右移。\\
+                移动到 $L=2,\ R=4$，和为 $9$，找到解。
+                左指针右移，继续找下一段。
+            \end{exampleblock}
+            \vspace{0.4em}
+            \footnotesize
+            两个指针都只向右走，所以总移动次数是 $O(n)$。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{双指针：两个指针面对面走}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \small
+            两个指针从区间两端出发，向中间收缩。若当前状态能
+            \hl{决定移动哪一端}，就可以逐步缩小搜索范围：
+            \begin{itemize}
+                \item 左指针右移，区间和/代价单调增大
+                \item 右指针左移，区间和/代价单调减小
+                \item 每个位置最多被访问一次
+                \item 总复杂度 $O(n)$
+            \end{itemize}
+            \vspace{0.4em}
+            前提：条件必须单调。
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{exampleblock}{举例：有序数组两数之和}
+                \footnotesize
+                数组 $(1,2,4,7,11)$，目标和 $M=9$。\\
+                初始时 $L=1,\ R=5$，和为 $12>9$，右指针左移。\\
+                移动到 $L=1,\ R=4$，和为 $8<9$，左指针右移。\\
+                移动到 $L=2,\ R=4$，和为 $9$，找到解。
+            \end{exampleblock}
+            \vspace{0.4em}
+            \footnotesize
+            两个指针相向而行，每步至少移动一个指针，
+            所以总移动次数是 $O(n)$。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{例题 C：P1147 连续正整数和}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \small
+            \luogu{P1147}{连续正整数和}
+            \begin{block}{题意}
+                \footnotesize
+                给定 $M$，求所有长度至少为 $2$ 的连续正整数段，
+                使段内元素之和为 $M$。按左端点升序输出。
+            \end{block}
+            \begin{itemize}
+                \item $M\le 2\times10^6$
+                \item 暴力枚举左右端点：$O(M^2)$
+                \item 全是正数 $\Rightarrow$ 区间和随右端点增加、随左端点减少
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.44\textwidth}
+            \begin{block}{尺取法}
+                \footnotesize
+                维护 $[l,r]$ 与区间和 $sum$：
+                \begin{itemize}
+                    \item $sum<M$：右移 $r$，加入 $a_r$
+                    \item $sum>M$：右移 $l$，删去 $a_l$
+                    \item $sum=M$：输出，然后右移 $l$ 继续找
+                \end{itemize}
+            \end{block}
+            \vspace{0.4em}
+            \footnotesize
+            初始 $l=1,r=2,sum=3$；循环条件 $l\le M/2$。\\
+            时间复杂度 $O(M)$，空间 $O(1)$。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+\section{单调栈}
+
+\begin{frame}{单调栈：右边第一个更大值}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \small
+            对每个 $i$，求
+            \[
+                f(i)=\min\{j>i\mid a_j>a_i\}.
+            \]
+            从左往右扫描，栈中存\hl{下标}，并保持栈内对应的值严格递减。当准备入栈 $i$ 时：
+            \begin{itemize}
+                \item 弹出栈顶所有 $< a_i$ 的元素
+                \item 此时被弹出的元素的右边第一个更大值就是 $a_i$
+                \item 把 $i$ 入栈
+            \end{itemize}
+            \vspace{0.4em}
+            每个下标进栈、出栈各一次，总复杂度 $O(n)$。
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{exampleblock}{举例}
+                \footnotesize
+                $a=(3,1,4,1,5)$：\\
+                $f(1)=3$（$a_3=4$）\\
+                $f(2)=3$（$a_3=4$）\\
+                $f(3)=5$（$a_5=5$）\\
+                $f(4)=5$（$a_5=5$）\\
+                $f(5)=0$（右边没有更大的）
+            \end{exampleblock}
+            \vspace{0.3em}
+            \footnotesize
+            被弹出的元素 $< a_i$，而 $i$ 又更靠右，\\
+            所以它不可能再成为右边元素的答案。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{例题 D：P5788 单调栈}
+    \begin{columns}[T]
+        \begin{column}{0.52\textwidth}
+            \small
+            \luogu{P5788}{【模板】单调栈}
+            \begin{block}{题意}
+                \footnotesize
+                给出长度为 $n$ 的数列，对每个 $i$ 求 $f(i)$：
+                右边第一个大于 $a_i$ 的数的\hl{下标}；
+                不存在则输出 $0$。
+            \end{block}
+            \begin{itemize}
+                \item $n\le 3\times10^6$
+                \item 暴力 $O(n^2)$ 不可行
+                \item 单调栈 $O(n)$
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.44\textwidth}
+            \begin{block}{步骤}
+                \footnotesize
+                \begin{enumerate}
+                    \item 从 $1$ 到 $n$ 扫描
+                    \item 弹掉栈顶所有 $a_{st[top]}< a_i$
+                    \item 把 $i$ 压入栈
+                    \item 扫描结束后，栈内其余元素答案为 $0$
+                \end{enumerate}
+            \end{block}
+            \vspace{0.4em}
+            \footnotesize
+            弹栈时，一定要保证栈非空。\\
+            注意题目要的是\hl{严格大于}，所以弹出条件是 $<$。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+\section{桶数组}
+
+\begin{frame}{桶数组：下标就是值}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \small
+            用一个数组的下标表示“值”，元素表示
+            “这个值出现了几次 / 是否存在 / 对应什么信息”：
+            \[
+                cnt[x]=\#\{i\mid a_i=x\}.
+            \]
+            \begin{itemize}
+                \item 时间复杂度 $O(n+V)$，$V$ 是值域
+                \item 空间复杂度 $O(V)$
+                \item 适合 $V$ 不大：去重、排序、频率、众数
+                \item 本质：\hl{用空间换时间}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{exampleblock}{举例}
+                \footnotesize
+                值 $2,4,6,8$ 依次出现：\\
+                把 $cnt[2],cnt[4],cnt[6],cnt[8]$ 标记为 $1$。\\
+                从 $1$ 到 $8$ 扫描桶，读出 $2,4,6,8$，\\
+                自动完成“去重 + 排序”。
+            \end{exampleblock}
+            \vspace{0.4em}
+            \footnotesize
+            当 $V$ 很大（如 $10^9$）时，桶开不下，需要
+            \texttt{map}（$O(\log n)$）或离散化。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{例题 E：P1059 明明的随机数}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \small
+            \luogu{P1059}{明明的随机数}
+            \begin{block}{题意}
+                \footnotesize
+                给出 $N$ 个 $1\sim1000$ 之间的整数，
+                去重后从小到大输出。
+            \end{block}
+            \begin{itemize}
+                \item $N\le 100$，值域只有 $1000$
+                \item 桶：$cnt[x]$ 标记 $x$ 是否出现
+                \item 时间 $O(N+1000)$，空间 $O(1000)$
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \begin{block}{步骤}
+                \footnotesize
+                \begin{enumerate}
+                    \item 读入 $x$，若 $cnt[x]=0$，标记并计数
+                    \item 从 $1$ 到 $1000$ 扫描
+                    \item 输出所有 $cnt[x]\ne0$ 的 $x$
+                \end{enumerate}
+            \end{block}
+            \vspace{0.4em}
+            \footnotesize
+            也可以 \texttt{sort + unique}，$O(N\log N)$；\\
+            但值域小时，桶是线性的。
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+\section{小结}
+
+\begin{frame}{本讲小结}
+    \centering
+    \footnotesize
+    \begin{tabular}{llll}
+        \toprule
+        方法 & 应用 & 复杂度 & 例题 \\
+        \midrule
+        差分 & 多次区间加，最后统一查询 & $O(n+p)$ & P2367 \\
+        前缀和 & 静态数组，多次区间和 & $O(n+m)$ & P8218 \\
+        双指针 & 区间满足单调性，指针不回退 & $O(n)$ & P1147 \\
+        单调栈 & 下一个更大/更小 & $O(n)$ & P5788 \\
+        桶数组 & 值域小，计数/去重/排序 & $O(n+V)$ & P1059 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{1.2em}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{题单}
+                \footnotesize
+                完成 A-E 模板题和其余涉及本讲知识点的题目。
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{下一讲}
+                \footnotesize
+                离散化、单调队列、倍增。
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\end{document}

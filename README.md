@@ -1,5 +1,7 @@
 负责关于算法竞赛的各类讲课交流活动时的形成的资料
 
+部分资料使用了 https://github.com/ShinoharaHaruna/SDU-Beamer-Theme
+
 ---
 
 一些话
